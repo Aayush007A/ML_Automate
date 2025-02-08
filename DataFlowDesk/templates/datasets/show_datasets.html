@@ -1,0 +1,259 @@
+{% extends "../base.html" %}
+
+{% block extra_css %}
+<style>
+    .dataset-card {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dataset-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .empty-state {
+        opacity: 0;
+        transform: scale(0.95);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .empty-state.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .create-button:hover {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.625rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .status-badge.ready {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    .status-badge.processing {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    .status-badge.error {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include '../includes/sidebar.html' %}
+
+<div class="content-with-sidebar">
+    <div class="bg-gray-50 min-h-screen py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header Section -->
+            <div class="text-center mb-12 fade-up">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Your Datasets</h1>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Manage and analyze your datasets with powerful machine learning tools
+                </p>
+            </div>
+    
+            <!-- Action Buttons -->
+            <div class="flex justify-end mb-8 space-x-4">
+                <button onclick="openModal('uploadModal')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload Dataset
+                </button>
+                <button onclick="openModal('createModal')" class="create-button inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Dataset
+                </button>
+            </div>
+    
+            <!-- Dataset Table -->
+            <div class="max-w-[100%] mx-auto">
+                <div class="bg-white rounded-lg border border-gray-100">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-100">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="w-[14%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th class="w-[14%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th class="w-[7%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                                    <th class="w-[7%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rows</th>
+                                    <th class="w-[7%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Columns</th>
+                                    <th class="w-[11%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                    <th class="w-[10%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="w-[30%] px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white">
+                                {% if datasets %}
+                                {% for data in datasets %}
+                                <tr class="hover:bg-gray-50/50 transition-colors duration-200">
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ data.name }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500 truncate">{{ data.description|default:"No description" }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">{{ data.size }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">{{ data.rows }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">{{ data.columns }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">{{ data.created_at|date:"M d, Y" }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                            {% if data.status == 'processed' %}
+                                                bg-green-50 text-green-700
+                                            {% else %}
+                                                bg-yellow-50 text-yellow-700
+                                            {% endif %}">
+                                            {{ data.status|title }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="flex space-x-2">
+                                            <a href="{% url 'dataset_dashboard' data.id %}" 
+                                               class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">
+                                               <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                               </svg>
+                                               <span>View</span>
+                                            </a>
+                                            <a href="{% url 'display_graphs' data.id %}" 
+                                               class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">
+                                               <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                               </svg>
+                                               <span>Analyze</span>
+                                            </a>
+                                            <button onclick="confirmDelete('{{ data.id }}', '{{ data.name }}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="px-3 py-4 text-sm text-center text-gray-500">
+                                        No datasets found. Click "Create Dataset" to add one.
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed z-10 inset-0 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Delete Dataset</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Are you sure you want to delete <span id="datasetName"></span>? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form id="deleteForm" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Delete</button>
+                </form>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+// Intersection Observer for animations
+// const observerOptions = {
+//     root: null,
+//     rootMargin: "0px",
+//     threshold: 0.1
+// };
+
+// const observer = new IntersectionObserver((entries) => {
+//     entries.forEach(entry => {
+//         if (entry.isIntersecting) {
+//             entry.target.classList.add('visible');
+//             observer.unobserve(entry.target);
+//         }
+//     });
+// }, observerOptions);
+
+// Observe all animated elements
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.dataset-card');
+    const emptyState = document.querySelector('.empty-state');
+    
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            observer.observe(card);
+        }, index * 100); // Stagger the animations
+    });
+
+    if (emptyState) {
+        observer.observe(emptyState);
+    }
+});
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+function confirmDelete(datasetId, datasetName) {
+    document.getElementById('datasetName').textContent = datasetName;
+    document.getElementById('deleteForm').action = `/delete_dataset/${datasetId}/`;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

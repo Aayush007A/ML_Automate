@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'images/icon.png' %}">
+    <title>{% block title %}ML Automate{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .content-with-sidebar {
+            margin-left: 16rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}" class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-sm"> 2025 ML Automate. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Modal functions with animations
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            
+            // Trigger a reflow to ensure the transitions work
+            void modal.offsetWidth;
+            
+            // Add the visible classes
+            modal.classList.remove('opacity-0');
+            modal.classList.add('opacity-100');
+            
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.classList.remove('scale-95', 'translate-y-4');
+                modalContent.classList.add('scale-100', 'translate-y-0');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            
+            // Start the closing animation
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.classList.remove('scale-100', 'translate-y-0');
+                modalContent.classList.add('scale-95', 'translate-y-4');
+            }
+            
+            // Hide the modal after the animation completes
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

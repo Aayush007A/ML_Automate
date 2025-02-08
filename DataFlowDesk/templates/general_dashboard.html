@@ -1,0 +1,589 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Include the sidebar -->
+{% include 'includes/sidebar.html' %}
+
+<!-- Main Content -->
+<div class="ml-64 p-8 bg-gray-100 min-h-screen">
+    <!-- Search Bar -->
+    <div class="mb-8">
+        <div class="relative">
+            <input type="text" placeholder="Search..." class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <svg class="absolute right-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Datasets -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-gray-500 text-sm font-medium">Total Datasets</h3>
+            <p class="text-3xl font-bold text-gray-900">{{ total_datasets }}</p>
+            <div class="mt-2 flex items-center text-sm text-green-600">
+                <span class="font-medium">↑ 12%</span>
+                <span class="ml-2">from last month</span>
+            </div>
+        </div>
+
+        <!-- Clean Datasets -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-gray-500 text-sm font-medium">Clean Datasets</h3>
+            <p class="text-3xl font-bold text-gray-900">{{ clean_datasets }}</p>
+            <div class="mt-2 flex items-center text-sm text-green-600">
+                <span class="font-medium">{{ clean_datasets_percentage }}%</span>
+                <span class="ml-2">of total</span>
+            </div>
+        </div>
+
+        <!-- Unclean Datasets -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-gray-500 text-sm font-medium">Unclean Datasets</h3>
+            <p class="text-3xl font-bold text-gray-900">{{ unclean_datasets }}</p>
+            <div class="mt-2 flex items-center text-sm text-red-600">
+                <span class="font-medium">{{ unclean_datasets_percentage }}%</span>
+                <span class="ml-2">of total</span>
+            </div>
+        </div>
+
+        <!-- Total Models -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-gray-500 text-sm font-medium">Total Models</h3>
+            <p class="text-3xl font-bold text-gray-900">{{ total_models }}</p>
+            <div class="mt-2 flex items-center text-sm text-blue-600">
+                <span class="font-medium">↑ 8%</span>
+                <span class="ml-2">from last month</span>
+            </div>
+        </div>
+    </div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Data Completeness Overview -->
+    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Data Completeness</h3>
+            <span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">Overview</span>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">Analysis of complete vs incomplete datasets in your collection</p>
+        <div class="relative h-[400px] bg-gray-50 rounded-lg p-4">
+            <img src="data:image/png;base64,{{ dataset_dist_plot }}" 
+                 alt="Data Completeness" 
+                 class="w-full h-full object-contain">
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-4">
+            <div class="text-center p-2 bg-green-50 rounded-lg">
+                <span class="text-sm font-medium text-green-800">Complete</span>
+            </div>
+            <div class="text-center p-2 bg-red-50 rounded-lg">
+                <span class="text-sm font-medium text-red-800">Incomplete</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dataset Types Distribution -->
+    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">File Types</h3>
+            <span class="px-3 py-1 text-sm bg-purple-100 text-purple-800 rounded-full">Distribution</span>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">Distribution of different file formats in your dataset collection</p>
+        <div class="relative h-[400px] bg-gray-50 rounded-lg p-4">
+            <img src="data:image/png;base64,{{ quality_trend_plot }}" 
+                 alt="Dataset Types" 
+                 class="w-full h-full object-contain">
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2">
+            <div class="text-center p-2 bg-indigo-50 rounded-lg">
+                <span class="text-xs font-medium text-indigo-800">CSV</span>
+            </div>
+            <div class="text-center p-2 bg-emerald-50 rounded-lg">
+                <span class="text-xs font-medium text-emerald-800">Excel</span>
+            </div>
+            <div class="text-center p-2 bg-amber-50 rounded-lg">
+                <span class="text-xs font-medium text-amber-800">Text</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Dataset Usage Heatmap -->
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Dataset Usage Intensity</h3>
+        <div class="relative h-[400px]">
+            {% if usage_heatmap %}
+            <img src="data:image/png;base64,{{ usage_heatmap }}" 
+                 alt="Dataset Usage Heatmap" 
+                 class="w-full h-full object-contain">
+            {% else %}
+            <div class="flex items-center justify-center h-full">
+                <p class="text-gray-500">No usage data available</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Processing Status Chart -->
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Processing Status</h3>
+        <div class="relative h-[400px]">
+            <img src="data:image/png;base64,{{ processing_status_plot }}" 
+                 alt="Processing Status" 
+                 class="w-full h-full object-contain">
+        </div>
+    </div>
+</div>
+
+
+   <!-- Trained Models Section -->
+<!-- Trained Models Section -->
+<div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-gray-900">Recent Models</h3>
+        <div class="space-x-4">
+            <button onclick="showDatasetModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Train New Model
+            </button>
+        </div>
+    </div>
+
+    {% if dataset_results %}
+    <div class="space-y-8">
+        {% for dataset_id, data in dataset_results.items %}
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">{{ data.dataset_name }}</h3>
+                <a href="{% url 'predictions' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    See All Models →
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for model in data.models %}
+                <div class="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-lg font-medium text-gray-900">{{ model.name }}</span>
+                        <span class="px-3 py-1 text-sm rounded-full {% if model.type == 'classification' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ model.type }}
+                        </span>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">Accuracy:</span> 
+                            {% if model.accuracy %}
+                                {{ model.accuracy|floatformat:2 }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">Created:</span> {{ model.created_at|date:"M d, Y" }}
+                        </p>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <button onclick="downloadModel('{{ model.id }}')"
+                            class="flex-1 min-w-[120px] inline-flex justify-center items-center px-4 py-2.5
+                            bg-gradient-to-r from-emerald-500 to-teal-400 text-white rounded-xl
+                            hover:from-emerald-600 hover:to-teal-500
+                            transform hover:-translate-y-0.5 transition-all duration-300
+                            shadow-md hover:shadow-xl hover:shadow-emerald-500/20
+                            text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                        <a href="{% url 'predictions' %}"
+                            class="flex-1 min-w-[120px] inline-flex justify-center items-center px-4 py-2.5
+                            bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-xl
+                            hover:from-indigo-700 hover:to-blue-600
+                            transform hover:-translate-y-0.5 transition-all duration-300
+                            shadow-md hover:shadow-xl hover:shadow-indigo-500/20
+                            text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            <span>Predict</span>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-8">
+        <p class="text-gray-500 mb-4">No trained models yet. Start by training your first model!</p>
+        <button onclick="showDatasetModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Train New Model
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Activity Timeline -->
+<div class="bg-white p-6 rounded-lg shadow mb-8">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activities</h3>
+    <div class="relative">
+        <div class="border-l-2 border-gray-200 ml-3">
+            {% for activity in recent_activities %}
+            <div class="mb-6 ml-6">
+                <div class="flex items-center mb-1">
+                    <div class="absolute -left-1.5 w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span class="text-sm font-medium text-gray-900">{{ activity.timestamp|date:"M d, Y H:i" }}</span>
+                </div>
+                <p class="text-gray-700">{{ activity.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+    <!-- Datasets Usage Table -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Datasets Usage</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dataset Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usage</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for dataset in datasets %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ dataset.name }}</div>
+                                    <div class="text-sm text-gray-500">{{ dataset.description }}</div>
+                                    {% if dataset.target_class %}
+                                    <div class="text-xs text-indigo-600 mt-1">
+                                        Target: {{ dataset.target_class }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if dataset.status == 'processed' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Clean</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Unprocessed</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full progress-bar" data-percentage="{{ dataset.usage_percentage }}"></div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex space-x-2">
+                                <a href="{% url 'dataset_dashboard' dataset.id %}" 
+                                    class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                    <span>View</span>
+                                    <svg class="ml-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                <button onclick="confirmDelete('{{ dataset.id }}')"
+                                    class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200">
+                                    <span>Delete</span>
+                                    <svg class="ml-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Selection Modal -->
+<div id="datasetModal" class="hidden fixed inset-0 z-50">
+    <!-- Backdrop with modern blur -->
+    <div class="absolute inset-0 bg-gray-900/30 backdrop-blur-md transition-all duration-300"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white/80 backdrop-blur-xl w-full max-w-3xl rounded-2xl shadow-2xl border border-white/20 transform transition-all duration-300">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-100/30">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                            Select Dataset for Training
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500">Choose a dataset to start training your model</p>
+                    </div>
+                    <button onclick="hideDatasetModal()" class="p-2 hover:bg-gray-100/50 rounded-xl transition-colors duration-200">
+                        <svg class="w-6 h-6 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dataset List -->
+            <div class="max-h-[60vh] overflow-y-auto p-6 space-y-4">
+                {% for dataset in available_dataset %}
+                <div class="group bg-white/60 hover:bg-white/90 p-5 rounded-xl border border-gray-100/50 hover:border-violet-200/50 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5"
+                     onclick="selectDataset('{{ dataset.id }}')">
+                    <div class="flex justify-between items-center">
+                        <div class="space-y-1">
+                            <h4 class="text-lg font-semibold text-gray-900 group-hover:text-violet-600 transition-colors">
+                                {{ dataset.name }}
+                            </h4>
+                            <p class="text-sm text-gray-500 group-hover:text-gray-600">
+                                {{ dataset.description|default:"No description" }}
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="px-3 py-1.5 text-sm rounded-full font-medium 
+                                {% if dataset.status == 'clean' %}
+                                    bg-gradient-to-r from-green-50 to-emerald-50 text-emerald-700 border border-emerald-200/50
+                                {% else %}
+                                    bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border border-amber-200/50
+                                {% endif %}">
+                                {{ dataset.status|title }}
+                            </span>
+                            <div class="flex flex-col items-end text-sm text-gray-400 group-hover:text-gray-600">
+                                <span class="font-medium">{{ dataset.uploaded_at|date:"M d" }}</span>
+                                <span>{{ dataset.uploaded_at|date:"Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12 px-4">
+                    <div class="bg-gray-50/50 rounded-2xl p-8 border border-gray-100/50">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <h3 class="mt-4 text-lg font-medium text-gray-900">No datasets available</h3>
+                        <p class="mt-2 text-sm text-gray-500">Get started by uploading your first dataset</p>
+                        <a href="{% url 'upload' %}" 
+                           class="mt-6 inline-flex items-center px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/35 transform hover:-translate-y-0.5 transition-all duration-300">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Upload Dataset
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Delete Dataset</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">Are you sure you want to delete this dataset? This action cannot be undone.</p>
+            </div>
+            <div class="flex justify-center mt-4 space-x-4">
+                <button onclick="hideDeleteModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-md">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<!-- Charts Initialization -->
+<script>
+
+    // Handle model download
+    document.getElementById('downloadModelBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/download_model/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'trained_model.pkl';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } else {
+                throw new Error('Download failed');
+            }
+        } catch (error) {
+            console.error('Error downloading model:', error);
+            alert('Failed to download the model. Please try again.');
+        }
+    });
+
+
+    // Set progress bar widths
+    document.querySelectorAll('.progress-bar').forEach(bar => {
+        const percentage = bar.getAttribute('data-percentage') || 0;
+        bar.style.width = `${percentage}%`;
+    });
+
+    // Helper function to safely get context variables with defaults
+    function getContextData(data, defaultValue = []) {
+        try {
+            return JSON.parse(data) || defaultValue;
+        } catch (e) {
+            console.warn('Error parsing data:', e);
+            return defaultValue;
+        }
+    }
+
+    // Datasets Analysis Chart
+    const datasetsAnalysisElement = document.getElementById('datasetsAnalysisChart');
+    if (datasetsAnalysisElement) {
+        const datasetsCtx = datasetsAnalysisElement.getContext('2d');
+        new Chart(datasetsCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Diagnostic Imaging', 'Data.Gov', 'Image Net', 'MNIST', 'MHLDDS', 'HES'],
+                datasets: [{
+                    label: 'Current Period',
+                    data: getContextData('{{ datasets_analysis_current|safe }}'),
+                    borderColor: 'rgb(99, 102, 241)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                },
+                {
+                    label: 'Previous Period',
+                    data: getContextData('{{ datasets_analysis_previous|safe }}'),
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    }
+
+    // Quality Chart
+    const qualityElement = document.getElementById('qualityChart');
+    if (qualityElement) {
+        const qualityCtx = qualityElement.getContext('2d');
+        new Chart(qualityCtx, {
+            type: 'line',
+            data: {
+                labels: getContextData('{{ quality_labels|safe }}'),
+                datasets: [{
+                    label: 'Completeness',
+                    data: getContextData('{{ completeness_data|safe }}'),
+                    borderColor: 'rgb(99, 102, 241)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Quality',
+                    data: getContextData('{{ quality_data|safe }}'),
+                    borderColor: 'rgb(16, 185, 129)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+<script>
+    function downloadModel(modelId) {
+        fetch(`/download_model/?model_id=${modelId}`, {
+            method: 'GET',
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `model_${modelId}.pkl`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Error downloading model:', error);
+            alert('Error downloading model. Please try again.');
+        });
+    }
+
+    function confirmDelete(datasetId) {
+        const modal = document.getElementById('deleteModal');
+        const form = document.getElementById('deleteForm');
+        form.action = `/delete_dataset/${datasetId}/`;
+        modal.classList.remove('hidden');
+    }
+
+    function hideDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('hidden');
+    }
+
+    function showDatasetModal() {
+        document.getElementById('datasetModal').classList.remove('hidden');
+    }
+
+    function hideDatasetModal() {
+        document.getElementById('datasetModal').classList.add('hidden');
+    }
+
+    function selectDataset(datasetId) {
+        window.location.href = `/model_training/${datasetId}`;
+    }
+
+
+</script>
+{% endblock %}
