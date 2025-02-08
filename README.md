@@ -97,7 +97,7 @@ ru2ya.ai/
 - **Model Metrics**: ROC curves, confusion matrices, and learning curves
 - **Interactive Reports**: Real-time performance monitoring dashboards
 
-## Contributing
+<!-- ## Contributing
 
 We welcome contributions! Here's how you can help:
 
@@ -112,7 +112,7 @@ We welcome contributions! Here's how you can help:
 [![Issues](https://img.shields.io/badge/issues-0-blue.svg?style=for-the-badge)](https://github.com/username/ru2ya.ai/issues)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](https://github.com/username/ru2ya.ai/pulls)
 
-</div>
+</div> -->
 
 ## License
 
