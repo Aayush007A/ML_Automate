@@ -60,7 +60,6 @@ MLAutomate.ai is an advanced web-based machine learning platform designed to str
 
 </div>
 
-
 <!-- ## Project Structure
 
 ```
