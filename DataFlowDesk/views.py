@@ -2717,6 +2717,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.decomposition import PCA
+from sklearn.linear_model import Ridge,Lasso
 import numpy as np
 import time
 
@@ -2837,7 +2838,221 @@ def train_model(request):
                     'model_id': ml_model.id,  # Add this line
                     'results': results
                 })
+            
+            elif model_name == 'ridge_regression':
+                # Fetch parameters for Linear Regression
+                alpha = request.POST.get('alpha', 1)
+                model = Ridge(alpha=int(alpha) if alpha else None)
 
+                # Scale the features
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+
+                # Fit the model on the log-transformed target
+                model.fit(X_train, y_train)
+                # Add feature_names_in_ attribute to the model
+                model.feature_names_in_ = feature_columns  # Add feature names
+                model.suggested_ranges = {  # Add suggested input ranges
+                    feature: f"{X[feature].min()} - {X[feature].max()}" for feature in feature_columns
+                }
+                y_pred = model.predict(X_test)
+                r2 = r2_score(y_test, y_pred)
+
+                # Evaluate metrics on the original scale
+                # Generate Visualizations
+                results = generate_visualizations(
+                    model_type='regression',
+                    model=model,  # Trained regression model
+                    y_true=y_test,  # True target values
+                    y_pred=y_pred,  # Predicted values from the model
+                    X=X_test, # Features used for predictions
+                    model_identifier= f'ridge_regression_model_{dataset_id}'
+                )
+                # print(f"Metrics: {results}")
+
+                # Save the trained model as a .pkl file
+                model_filename = f"ridge_regression_model_{dataset_id}.pkl"
+                models_dir = os.path.join(settings.MEDIA_ROOT, 'models')
+                os.makedirs(models_dir, exist_ok=True)
+                model_path = os.path.join(models_dir, model_filename)
+                with open(model_path, 'wb') as f:
+                    joblib.dump(model, f)
+
+                # Save to MLModel table
+                ml_model = MLModel.objects.create(
+                    dataset=dataset,
+                    algorithm='Ridge Regression',
+                    training_status='completed',
+                    model_path = model_path
+                )
+
+                # Save results to ModelResult table
+                ModelResult.objects.create(
+                    model=ml_model,
+                    metric_name='mean_squared_error',
+                    metric_value=results['metrics']['mean_squared_error'],
+                    # visualization_path=f'data:image/png;base64,{image_base64}',
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'model_id': ml_model.id,  # Add this line
+                    'results': results
+                })
+            
+            elif model_name == 'polynomial_regression':
+                # Create unique model identifier
+                import datetime
+                timestamp = int(datetime.datetime.now().timestamp())
+                model_identifier = f'polynomial_regression_{dataset_id}_{timestamp}'
+
+                # Scale the features
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
+
+                # Test different polynomial degrees
+                max_degree = 10  # Maximum degree to test
+                degrees = range(1, max_degree + 1)
+                degree_scores = {}
+                degree_predictions = {}
+                degree_models = {}
+                best_r2 = float('-inf')
+                best_degree = None
+                best_model = None
+                best_y_pred = None
+
+                # Store MSE and R2 scores for each degree
+                mse_scores = []
+                r2_scores = []
+
+                for degree in degrees:
+                    try:
+                        # Create polynomial features
+                        poly = PolynomialFeatures(degree=degree)
+                        X_train_poly = poly.fit_transform(X_train_scaled)
+                        X_test_poly = poly.transform(X_test_scaled)
+
+                        # Train model
+                        lr_model = LinearRegression()
+                        lr_model.fit(X_train_poly, y_train)
+                        
+                        # Make predictions
+                        y_pred = lr_model.predict(X_test_poly)
+                        
+                        # Calculate metrics
+                        mse = mean_squared_error(y_test, y_pred)
+                        r2 = r2_score(y_test, y_pred)
+                        
+                        # Store scores and predictions
+                        degree_scores[degree] = {'mse': mse, 'r2': r2}
+                        degree_predictions[degree] = y_pred
+                        degree_models[degree] = (lr_model, poly)
+                        
+                        mse_scores.append(mse)
+                        r2_scores.append(r2)
+
+                        # Update best model if this one is better
+                        if r2 > best_r2:
+                            best_r2 = r2
+                            best_degree = degree
+                            best_model = lr_model
+                            best_y_pred = y_pred
+
+                    except Exception as e:
+                        print(f"Error training polynomial regression with degree {degree}: {str(e)}")
+                        degree_scores[degree] = {'mse': float('inf'), 'r2': float('-inf')}
+
+                # Create degree comparison plot
+                comparison_path = os.path.join(settings.MEDIA_ROOT, 'visualizations', 
+                                            model_identifier, 'degree_comparison.png')
+                os.makedirs(os.path.dirname(comparison_path), exist_ok=True)
+                
+                fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+                
+                # Plot MSE scores
+                ax1.plot(degrees, mse_scores, 'bo-')
+                ax1.axvline(x=best_degree, color='r', linestyle='--', 
+                            label=f'Best degree={best_degree}')
+                ax1.set_title('Mean Squared Error vs Polynomial Degree')
+                ax1.set_xlabel('Polynomial Degree')
+                ax1.set_ylabel('Mean Squared Error')
+                ax1.grid(True)
+                ax1.legend()
+
+                # Plot R² scores
+                ax2.plot(degrees, r2_scores, 'go-')
+                ax2.axvline(x=best_degree, color='r', linestyle='--', 
+                            label=f'Best degree={best_degree}')
+                ax2.set_title('R² Score vs Polynomial Degree')
+                ax2.set_xlabel('Polynomial Degree')
+                ax2.set_ylabel('R² Score')
+                ax2.grid(True)
+                ax2.legend()
+
+                plt.tight_layout()
+                plt.savefig(comparison_path)
+                plt.close()
+
+                # Use the best model and its polynomial transformer
+                model, poly = degree_models[best_degree]
+                y_pred = degree_predictions[best_degree]
+
+                # Store feature names and ranges
+                model.feature_names_in_ = feature_columns
+                model.suggested_ranges = {
+                    feature: f"{X[feature].min()} - {X[feature].max()}" for feature in feature_columns
+                }
+
+                # Generate visualizations
+                results = generate_visualizations(
+                    model_type='regression',
+                    model=model,
+                    y_true=y_test,
+                    y_pred=y_pred,
+                    X=X_test_scaled,
+                    feature_names=feature_columns,
+                    model_identifier=model_identifier
+                )
+
+                # Add degree comparison to visualizations
+                results['visualizations']['degree_comparison'] = f'/visualizations/{model_identifier}/degree_comparison.png'
+
+                # Save both the model and polynomial transformer
+                model_filename = f"polynomial_regression_model_{dataset_id}.pkl"
+                models_dir = os.path.join(settings.MEDIA_ROOT, 'models')
+                os.makedirs(models_dir, exist_ok=True)
+                model_path = os.path.join(models_dir, model_filename)
+                
+                # Save as a tuple of (model, poly_transformer)
+                with open(model_path, 'wb') as f:
+                    joblib.dump((model, poly), f)
+
+                # Save to MLModel table
+                ml_model = MLModel.objects.create(
+                    dataset=dataset,
+                    algorithm=f'Polynomial Regression (degree={best_degree})',
+                    training_status='completed',
+                    model_path=model_path
+                )
+
+                # Save results to ModelResult table
+                ModelResult.objects.create(
+                    model=ml_model,
+                    metric_name='r2_score',
+                    metric_value=best_r2,
+                )
+
+                # Add polynomial-specific metrics to results
+                results['metrics'].update({
+                    'best_degree': best_degree,
+                    'best_r2_score': best_r2,
+                    'degree_comparison': degree_scores
+                })
+                return JsonResponse({
+                    'success': True,
+                    'model_id': ml_model.id,  # Add this line
+                    'results': results
+                })
 
             elif model_name == 'decision_tree':
                 # Fetch parameters for Decision Tree
@@ -3093,7 +3308,7 @@ def train_model(request):
                 ModelResult.objects.create(
                     model=ml_model,
                     metric_name='accuracy',
-                    metric_value=results['metrics']['accuracy'],
+                    metric_value=results['metrics']['accuracy']
                 )
 
                 return JsonResponse({
@@ -3219,159 +3434,6 @@ def train_model(request):
                     'results': results
                 })
 
-            elif model_name == 'polynomial_regression':
-                # Create unique model identifier
-                import datetime
-                timestamp = int(datetime.datetime.now().timestamp())
-                model_identifier = f'polynomial_regression_{dataset_id}_{timestamp}'
-
-                # Scale the features
-                X_train_scaled = scaler.fit_transform(X_train)
-                X_test_scaled = scaler.transform(X_test)
-
-                # Test different polynomial degrees
-                max_degree = 10  # Maximum degree to test
-                degrees = range(1, max_degree + 1)
-                degree_scores = {}
-                degree_predictions = {}
-                degree_models = {}
-                best_r2 = float('-inf')
-                best_degree = None
-                best_model = None
-                best_y_pred = None
-
-                # Store MSE and R2 scores for each degree
-                mse_scores = []
-                r2_scores = []
-
-                for degree in degrees:
-                    try:
-                        # Create polynomial features
-                        poly = PolynomialFeatures(degree=degree)
-                        X_train_poly = poly.fit_transform(X_train_scaled)
-                        X_test_poly = poly.transform(X_test_scaled)
-
-                        # Train model
-                        lr_model = LinearRegression()
-                        lr_model.fit(X_train_poly, y_train)
-                        
-                        # Make predictions
-                        y_pred = lr_model.predict(X_test_poly)
-                        
-                        # Calculate metrics
-                        mse = mean_squared_error(y_test, y_pred)
-                        r2 = r2_score(y_test, y_pred)
-                        
-                        # Store scores and predictions
-                        degree_scores[degree] = {'mse': mse, 'r2': r2}
-                        degree_predictions[degree] = y_pred
-                        degree_models[degree] = (lr_model, poly)
-                        
-                        mse_scores.append(mse)
-                        r2_scores.append(r2)
-
-                        # Update best model if this one is better
-                        if r2 > best_r2:
-                            best_r2 = r2
-                            best_degree = degree
-                            best_model = lr_model
-                            best_y_pred = y_pred
-
-                    except Exception as e:
-                        print(f"Error training polynomial regression with degree {degree}: {str(e)}")
-                        degree_scores[degree] = {'mse': float('inf'), 'r2': float('-inf')}
-
-                # Create degree comparison plot
-                comparison_path = os.path.join(settings.MEDIA_ROOT, 'visualizations', 
-                                            model_identifier, 'degree_comparison.png')
-                os.makedirs(os.path.dirname(comparison_path), exist_ok=True)
-                
-                fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
-                
-                # Plot MSE scores
-                ax1.plot(degrees, mse_scores, 'bo-')
-                ax1.axvline(x=best_degree, color='r', linestyle='--', 
-                            label=f'Best degree={best_degree}')
-                ax1.set_title('Mean Squared Error vs Polynomial Degree')
-                ax1.set_xlabel('Polynomial Degree')
-                ax1.set_ylabel('Mean Squared Error')
-                ax1.grid(True)
-                ax1.legend()
-
-                # Plot R² scores
-                ax2.plot(degrees, r2_scores, 'go-')
-                ax2.axvline(x=best_degree, color='r', linestyle='--', 
-                            label=f'Best degree={best_degree}')
-                ax2.set_title('R² Score vs Polynomial Degree')
-                ax2.set_xlabel('Polynomial Degree')
-                ax2.set_ylabel('R² Score')
-                ax2.grid(True)
-                ax2.legend()
-
-                plt.tight_layout()
-                plt.savefig(comparison_path)
-                plt.close()
-
-                # Use the best model and its polynomial transformer
-                model, poly = degree_models[best_degree]
-                y_pred = degree_predictions[best_degree]
-
-                # Store feature names and ranges
-                model.feature_names_in_ = feature_columns
-                model.suggested_ranges = {
-                    feature: f"{X[feature].min()} - {X[feature].max()}" for feature in feature_columns
-                }
-
-                # Generate visualizations
-                results = generate_visualizations(
-                    model_type='regression',
-                    model=model,
-                    y_true=y_test,
-                    y_pred=y_pred,
-                    X=X_test_scaled,
-                    feature_names=feature_columns,
-                    model_identifier=model_identifier
-                )
-
-                # Add degree comparison to visualizations
-                results['visualizations']['degree_comparison'] = f'/visualizations/{model_identifier}/degree_comparison.png'
-
-                # Save both the model and polynomial transformer
-                model_filename = f"polynomial_regression_model_{dataset_id}.pkl"
-                models_dir = os.path.join(settings.MEDIA_ROOT, 'models')
-                os.makedirs(models_dir, exist_ok=True)
-                model_path = os.path.join(models_dir, model_filename)
-                
-                # Save as a tuple of (model, poly_transformer)
-                with open(model_path, 'wb') as f:
-                    joblib.dump((model, poly), f)
-
-                # Save to MLModel table
-                ml_model = MLModel.objects.create(
-                    dataset=dataset,
-                    algorithm=f'Polynomial Regression (degree={best_degree})',
-                    training_status='completed',
-                    model_path=model_path
-                )
-
-                # Save results to ModelResult table
-                ModelResult.objects.create(
-                    model=ml_model,
-                    metric_name='r2_score',
-                    metric_value=best_r2,
-                )
-
-                # Add polynomial-specific metrics to results
-                results['metrics'].update({
-                    'best_degree': best_degree,
-                    'best_r2_score': best_r2,
-                    'degree_comparison': degree_scores
-                })
-                return JsonResponse({
-                    'success': True,
-                    'model_id': ml_model.id,  # Add this line
-                    'results': results
-                })
             elif model_name == 'logistic_regression':
                 solver = request.POST.get('solver', 'lbfgs')
                 max_iter = int(request.POST.get('maxIter', 1000))
@@ -3534,9 +3596,15 @@ def train_model(request):
                     joblib.dump(model, f)
 
                 # Save to MLModel table
+                # ml_model = MLModel.objects.create(
+                #     dataset=dataset,
+                #     algorithm=f'Naive Bayes (var_smoothing={best_var_smoothing:.2e})',
+                #     training_status='completed',
+                #     model_path=model_path
+                # )
                 ml_model = MLModel.objects.create(
                     dataset=dataset,
-                    algorithm=f'Naive Bayes (var_smoothing={best_var_smoothing:.2e})',
+                    algorithm=f'Naive Bayes',
                     training_status='completed',
                     model_path=model_path
                 )
@@ -4249,17 +4317,33 @@ def fetch_models(request):
             model=model,
             metric_name='accuracy'
         ).first()
+        # Get R2 Score from ModelResult if it exists
+        r2_result = ModelResult.objects.filter(
+            model=model,
+            metric_name='RMSE'
+        ).first()
         
         accuracy_value = accuracy_result.metric_value if accuracy_result else None
+        r2_value = r2_result.metric_value if r2_result else None
         dataset_name = model.dataset.name if model.dataset else 'Unknown Dataset'
         
-        model_data = {
+        if accuracy_value:
+            model_data = {
+                'id': model.id,
+                'algorithm': model.algorithm,
+                'created_at': model.created_at,
+                'dataset_id': model.dataset.id if model.dataset else None,
+                'dataset_name': dataset_name,
+                'accuracy': accuracy_value
+            }
+        else:
+            model_data = {
             'id': model.id,
             'algorithm': model.algorithm,
             'created_at': model.created_at,
             'dataset_id': model.dataset.id if model.dataset else None,
             'dataset_name': dataset_name,
-            'accuracy': accuracy_value
+            'accuracy': r2_value
         }
         model_list.append(model_data)
     
