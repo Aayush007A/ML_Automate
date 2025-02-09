@@ -2717,7 +2717,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.decomposition import PCA
-from sklearn.linear_model import Ridge,Lasso
+from sklearn.linear_model import Ridge,Lasso,ElasticNet
 import numpy as np
 import time
 
@@ -2882,6 +2882,128 @@ def train_model(request):
                 ml_model = MLModel.objects.create(
                     dataset=dataset,
                     algorithm='Ridge Regression',
+                    training_status='completed',
+                    model_path = model_path
+                )
+
+                # Save results to ModelResult table
+                ModelResult.objects.create(
+                    model=ml_model,
+                    metric_name='mean_squared_error',
+                    metric_value=results['metrics']['mean_squared_error'],
+                    # visualization_path=f'data:image/png;base64,{image_base64}',
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'model_id': ml_model.id,  # Add this line
+                    'results': results
+                })
+            
+            elif model_name == 'lasso_regression':
+                # Fetch parameters for Linear Regression
+                alpha = request.POST.get('alpha', 1)
+                model = Lasso(alpha=int(alpha) if alpha else None)
+
+                # Scale the features
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+
+                # Fit the model on the log-transformed target
+                model.fit(X_train, y_train)
+                # Add feature_names_in_ attribute to the model
+                model.feature_names_in_ = feature_columns  # Add feature names
+                model.suggested_ranges = {  # Add suggested input ranges
+                    feature: f"{X[feature].min()} - {X[feature].max()}" for feature in feature_columns
+                }
+                y_pred = model.predict(X_test)
+                r2 = r2_score(y_test, y_pred)
+
+                # Evaluate metrics on the original scale
+                # Generate Visualizations
+                results = generate_visualizations(
+                    model_type='regression',
+                    model=model,  # Trained regression model
+                    y_true=y_test,  # True target values
+                    y_pred=y_pred,  # Predicted values from the model
+                    X=X_test, # Features used for predictions
+                    model_identifier= f'lasso_regression_model_{dataset_id}'
+                )
+                # print(f"Metrics: {results}")
+
+                # Save the trained model as a .pkl file
+                model_filename = f"lasso_regression_model_{dataset_id}.pkl"
+                models_dir = os.path.join(settings.MEDIA_ROOT, 'models')
+                os.makedirs(models_dir, exist_ok=True)
+                model_path = os.path.join(models_dir, model_filename)
+                with open(model_path, 'wb') as f:
+                    joblib.dump(model, f)
+
+                # Save to MLModel table
+                ml_model = MLModel.objects.create(
+                    dataset=dataset,
+                    algorithm='Lasso Regression',
+                    training_status='completed',
+                    model_path = model_path
+                )
+
+                # Save results to ModelResult table
+                ModelResult.objects.create(
+                    model=ml_model,
+                    metric_name='mean_squared_error',
+                    metric_value=results['metrics']['mean_squared_error'],
+                    # visualization_path=f'data:image/png;base64,{image_base64}',
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'model_id': ml_model.id,  # Add this line
+                    'results': results
+                })
+            
+            elif model_name == 'elasticnet_regression':
+                # Fetch parameters for Linear Regression
+                alpha = request.POST.get('alpha', 1)
+                model = ElasticNet(alpha=int(alpha) if alpha else None)
+
+                # Scale the features
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+
+                # Fit the model on the log-transformed target
+                model.fit(X_train, y_train)
+                # Add feature_names_in_ attribute to the model
+                model.feature_names_in_ = feature_columns  # Add feature names
+                model.suggested_ranges = {  # Add suggested input ranges
+                    feature: f"{X[feature].min()} - {X[feature].max()}" for feature in feature_columns
+                }
+                y_pred = model.predict(X_test)
+                r2 = r2_score(y_test, y_pred)
+
+                # Evaluate metrics on the original scale
+                # Generate Visualizations
+                results = generate_visualizations(
+                    model_type='regression',
+                    model=model,  # Trained regression model
+                    y_true=y_test,  # True target values
+                    y_pred=y_pred,  # Predicted values from the model
+                    X=X_test, # Features used for predictions
+                    model_identifier= f'elasticnet_regression_model_{dataset_id}'
+                )
+                # print(f"Metrics: {results}")
+
+                # Save the trained model as a .pkl file
+                model_filename = f"elasticnet_regression_model_{dataset_id}.pkl"
+                models_dir = os.path.join(settings.MEDIA_ROOT, 'models')
+                os.makedirs(models_dir, exist_ok=True)
+                model_path = os.path.join(models_dir, model_filename)
+                with open(model_path, 'wb') as f:
+                    joblib.dump(model, f)
+
+                # Save to MLModel table
+                ml_model = MLModel.objects.create(
+                    dataset=dataset,
+                    algorithm='ElasticNet Regression',
                     training_status='completed',
                     model_path = model_path
                 )
