@@ -53,9 +53,7 @@
                             <option value="ridge_regression">Ridge Regression</option>
                             <option value="lasso_regression">Lasso Regression</option>
                             <option value="elasticnet_regression">Elastic Net Regression</option>
-                            {% comment %} <option value="svr">Support Vector Regression</option>
-                            <option value="decision_tree_regression">Decision Tree Regression</option>
-                            <option value="gradient_boosting_regression">Gradient Boosting Regression</option> {% endcomment %}
+                            <option value="gradient_regression">Gradient Boosting Regression</option>
 
                         </optgroup>
                         {% endif %}
@@ -123,6 +121,16 @@
                 <div id="elasticParams" class="hidden">
                     <label for="alpha" class="block text-sm font-medium text-gray-700 mb-2">Alpha:</label>
                     <input type="number" id="alpha" name="alpha" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white/50 backdrop-blur-sm transition-all duration-300" placeholder="e.g., 1">
+                </div>
+
+                <!-- Parameters for Gradient Boosting Regression -->
+                <div id="gbParams" class="hidden">
+                    <label for="lrate" class="block text-sm font-medium text-gray-700 mb-2">Learning Rate:</label>
+                    <input type="text" id="lrate" name="lrate" pattern="^(0(\.\d+)?|1(\.0+)?)$" 
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white/50 backdrop-blur-sm transition-all duration-300"
+                        placeholder="e.g., must be between 0 and 1">
+                    <label for="nEstimators" class="block text-sm font-medium text-gray-700 mb-2">Number of Estimators:</label>
+                    <input type="number" id="nEstimators" name="nEstimators" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white/50 backdrop-blur-sm transition-all duration-300" placeholder="e.g., 100">
                 </div>
 
                 <!-- Neural Network Parameters -->
@@ -220,6 +228,7 @@
     const ridgeParams = document.getElementById('ridgeParams');
     const lassoParams = document.getElementById('lassoParams');
     const elasticParams = document.getElementById('elasticParams');
+    const gbParams = document.getElementById('gbParams');
     const knnParams = document.getElementById('knnParams');
     const svmParams = document.getElementById('svmParams');
     const polynomialRegressionParam = document.getElementById('polynomialRegressionParams');
@@ -265,6 +274,7 @@
         neuralNetworkParams.classList.add('hidden');
         lassoParams.classList.add('hidden');
         elasticParams.classList.add('hidden');
+        gbParams.classList.add('hidden');
 
         if (modelSelect.value === 'linear_regression') {
             parametersField.classList.add('hidden');
@@ -305,7 +315,10 @@
         } else if (modelSelect.value === 'elasticnet_regression') {
             parametersField.classList.add('hidden');
             elasticParams.classList.remove('hidden');
-        }     
+        }else if (modelSelect.value === 'gradient_regression') {
+            parametersField.classList.add('hidden');
+            gbParams.classList.remove('hidden');
+        }    
 
     });
 

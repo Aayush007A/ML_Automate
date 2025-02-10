@@ -40,6 +40,11 @@
         position: relative;
         z-index: 1;
     }
+    .gradient-heading {
+        background: linear-gradient(135deg, #4F46E5, #10B981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 </style>
 {% endblock %}
 
@@ -52,7 +57,7 @@
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Model Predictions</h1>
+                    <h1 class="text-3xl font-bold gradient-heading">Model Predictions</h1>
                     <p class="mt-1 text-sm text-gray-500">Select a model to make predictions or view visualizations</p>
                 </div>
                 {% comment %} <div class="flex space-x-3">

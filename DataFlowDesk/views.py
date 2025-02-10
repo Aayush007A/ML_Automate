@@ -2718,6 +2718,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.decomposition import PCA
 from sklearn.linear_model import Ridge,Lasso,ElasticNet
+from sklearn.ensemble import GradientBoostingRegressor
 import numpy as np
 import time
 
@@ -3360,7 +3361,136 @@ def train_model(request):
                     'model_id': ml_model.id,  # Add this line
                     'results': results
                 })
+                
+            elif model_name == 'gradient_regression':
+                # Create unique model identifier
+                import datetime
+                timestamp = int(datetime.datetime.now().timestamp())
+                model_identifier = f'svm_{dataset_id}_{timestamp}'
+                n_estimators = int(request.POST.get('nEstimators', 100))
+                learning_rate = float(request.POST.get('lrate', 0.001))
 
+                # Scale the features
+                X_train_scaled = pd.DataFrame(
+                    scaler.fit_transform(X_train),
+                    columns=feature_columns,
+                    index=X_train.index
+                )
+                X_test_scaled = pd.DataFrame(
+                    scaler.transform(X_test),
+                    columns=feature_columns,
+                    index=X_test.index
+                )
+
+                # List of kernels to try
+                kernels = ['squared_error', 'absolute_error', 'huber', 'quantile']
+                kernel_scores = {}
+                kernel_predictions = {}
+                best_accuracy = 0
+                best_kernel = None
+                best_model = None
+
+                # Train and evaluate SVM with different kernels
+                for kernel in kernels:
+                    try:
+                        # Train SVM with current kernel
+                        gb_model = GradientBoostingRegressor(loss=kernel, n_estimators=n_estimators,learning_rate=learning_rate)
+                        gb_model.fit(X_train_scaled, y_train)
+                        
+                        # Make predictions
+                        y_pred = gb_model.predict(X_test_scaled)
+                        
+                        # Calculate accuracy
+                        accuracy = r2_score(y_test, y_pred)
+                        kernel_scores[kernel] = accuracy
+                        kernel_predictions[kernel] = y_pred
+
+                        # Keep track of best performing kernel
+                        if accuracy > best_accuracy:
+                            best_accuracy = accuracy
+                            best_kernel = kernel
+                            best_model = gb_model
+
+                    except Exception as e:
+                        print(f"Error training GBR with {kernel} kernel: {str(e)}")
+                        kernel_scores[kernel] = 0
+
+                # Use the best model for final predictions
+                model = best_model
+                y_pred = kernel_predictions[best_kernel]
+
+                # Create kernel comparison plot
+                kernel_comparison_path = os.path.join(settings.MEDIA_ROOT, 'visualizations', model_identifier, 'loss_comparison.png')
+                os.makedirs(os.path.dirname(kernel_comparison_path), exist_ok=True)
+                
+                plt.figure(figsize=(10, 6))
+                bars = plt.bar(kernel_scores.keys(), kernel_scores.values())
+                plt.title('Gradient Boosting Regresser Loss Performance Comparison')
+                plt.xlabel('Loss Type')
+                plt.ylabel('R2 Score')
+                
+                # Add value labels on top of bars
+                for bar in bars:
+                    height = bar.get_height()
+                    plt.text(bar.get_x() + bar.get_width()/2., height,
+                            f'{height:.3f}',
+                            ha='center', va='bottom')
+                
+                # Highlight best kernel
+                bars[list(kernel_scores.keys()).index(best_kernel)].set_color('green')
+                plt.savefig(kernel_comparison_path)
+                plt.close()
+
+                # Store feature names and ranges for the best model
+                model.feature_names_in_ = feature_columns
+                model.suggested_ranges = {
+                    feature: f"{X[feature].min()} - {X[feature].max()}" for feature in feature_columns
+                }
+
+                # Generate standard visualizations with the best model
+                results = generate_visualizations(
+                    model_type='regression',
+                    model=model,
+                    y_true=y_test,
+                    y_pred=y_pred,
+                    X=X_test_scaled,
+                    feature_names=feature_columns,
+                    model_identifier=model_identifier
+                )
+
+                # Add kernel comparison to visualizations
+                results['visualizations']['loss_comparison'] = f'/visualizations/{model_identifier}/loss_comparison.png'
+                # print(f"Metrics: {results}")
+
+                # Save the trained model as a .pkl file
+                model_filename = f"gb_regression_model_{dataset_id}.pkl"
+                models_dir = os.path.join(settings.MEDIA_ROOT, 'models')
+                os.makedirs(models_dir, exist_ok=True)
+                model_path = os.path.join(models_dir, model_filename)
+                with open(model_path, 'wb') as f:
+                    joblib.dump(model, f)
+
+                # Save to MLModel table
+                ml_model = MLModel.objects.create(
+                    dataset=dataset,
+                    algorithm=f'GBRegresser (kernel={best_kernel})',
+                    training_status='completed',
+                    model_path = model_path
+                )
+
+                # Save results to ModelResult table
+                ModelResult.objects.create(
+                    model=ml_model,
+                    metric_name='mean_squared_error',
+                    metric_value=results['metrics']['mean_squared_error'],
+                    # visualization_path=f'data:image/png;base64,{image_base64}',
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'model_id': ml_model.id,  # Add this line
+                    'results': results
+                })
 
 
             elif model_name == 'random_forest':
