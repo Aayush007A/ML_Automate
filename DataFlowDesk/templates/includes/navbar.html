@@ -30,10 +30,10 @@
                 <!-- Theme Toggle Switch -->
                 <div class="relative">
                     <label for="theme-toggle" class="flex items-center cursor-pointer">
-                        <div class="relative">
+                        <div class="relative w-14 h-8">
                             <input type="checkbox" id="theme-toggle" class="sr-only">
-                            <div class="toggle-bg block w-14 h-8 bg-gray-400 rounded-full"></div>
-                            <div class="toggle-dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-all duration-300"></div>
+                            <div class="toggle-bg absolute inset-0 bg-gray-400 rounded-full transition-colors duration-300"></div>
+                            <div class="toggle-dot absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300"></div>
                         </div>
                         <span class="ml-3 text-sm font-medium text-white">Dark Mode</span>
                     </label>
@@ -71,22 +71,22 @@
             const toggleDot = document.querySelector(".toggle-dot");
             const toggleBg = document.querySelector(".toggle-bg");
     
-            // Apply the theme immediately on page load
+            // Apply the theme on page load
             function applyTheme(theme) {
                 if (theme === "dark") {
                     body.classList.add("dark");
                     themeToggle.checked = true;
-                    toggleDot.style.transform = "translateX(100%)";
-                    toggleBg.style.backgroundColor = "#222";
+                    toggleDot.style.transform = "translateX(100%)"; // Move dot to right
+                    toggleBg.style.backgroundColor = "#222"; // Dark mode color
                 } else {
                     body.classList.remove("dark");
                     themeToggle.checked = false;
-                    toggleDot.style.transform = "translateX(0%)";
-                    toggleBg.style.backgroundColor = "#bbb";
+                    toggleDot.style.transform = "translateX(0%)"; // Move dot to left
+                    toggleBg.style.backgroundColor = "#bbb"; // Light mode color
                 }
             }
     
-            // Check local storage for theme preference
+            // Load theme from local storage
             const savedTheme = localStorage.getItem("theme") || "light";
             applyTheme(savedTheme);
     
@@ -96,13 +96,9 @@
                 localStorage.setItem("theme", newTheme);
                 applyTheme(newTheme);
             });
-    
-            // Mobile menu toggle
-            document.getElementById("mobile-menu-btn").addEventListener("click", function () {
-                document.getElementById("mobile-menu").classList.toggle("hidden");
-            });
         });
     </script>
+    
     
     <!-- Dark Mode Styles -->
     <style>
@@ -133,6 +129,20 @@
             background-color: #222;
         }
     
+        #theme-toggle:checked + div .toggle-bg {
+            background-color: #222;
+        }
+        .toggle-dot {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        /* When checked, move dot to right */
+        #theme-toggle:checked + div .toggle-dot {
+            transform: translateX(100%);
+            background-color: #222;
+        }
+        
+        /* When checked, change background */
         #theme-toggle:checked + div .toggle-bg {
             background-color: #222;
         }

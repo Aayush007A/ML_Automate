@@ -12,6 +12,41 @@
         .content-with-sidebar {
             margin-left: 16rem;
         }
+        body.dark {
+            background-color: black;
+            color: white;
+        }
+        
+        body.dark .bg-white\/80 {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        body.dark .text-gray-800 {
+            color: #e0e0e0 !important;
+        }
+        
+        body.dark .border-white\/20 {
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        body.dark .hover\:bg-indigo-50:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .toggle-dot {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        /* When checked, move dot to right */
+        #theme-toggle:checked + div .toggle-dot {
+            transform: translateX(100%);
+            background-color: #222;
+        }
+        
+        /* When checked, change background */
+        #theme-toggle:checked + div .toggle-bg {
+            background-color: #222;
+        }
+        
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -70,6 +105,15 @@
                 modal.classList.add('hidden');
             }, 300);
         }
+            document.addEventListener("DOMContentLoaded", function () {
+                const savedTheme = localStorage.getItem("theme") || "light";
+                if (savedTheme === "dark") {
+                    document.body.classList.add("dark");
+                } else {
+                    document.body.classList.remove("dark");
+                }
+            });
+
     </script>
 
     {% block extra_js %}{% endblock %}

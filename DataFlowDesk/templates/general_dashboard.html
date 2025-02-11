@@ -455,6 +455,24 @@
         }
     });
 
+    document.addEventListener("DOMContentLoaded", function () {
+        const theme = localStorage.getItem("theme");
+        if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    });
+    
+    // Optional: If you want to toggle dark mode dynamically
+    function toggleDarkMode() {
+        if (document.documentElement.classList.contains("dark")) {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+        } else {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+        }
+    }
+    
 
     // Set progress bar widths
     document.querySelectorAll('.progress-bar').forEach(bar => {
@@ -587,4 +605,88 @@
 
 
 </script>
+
+<style>
+    /* Apply dark mode only when localStorage has "dark" */
+html.dark {
+    --tw-bg-opacity: 1;
+    background-color: rgb(17 24 39 / var(--tw-bg-opacity)); /* bg-gray-900 */
+    color: white;
+}
+
+.dark #datasetModal,
+.dark #deleteModal {
+    background-color: rgba(31, 41, 55, 0.9); /* bg-gray-800/90 */
+    backdrop-filter: blur(12px);
+}
+
+
+/* Modal Content */
+.dark #datasetModal > div,
+.dark #deleteModal > div {
+    background-color: rgba(31, 41, 55, 0.8); /* bg-gray-800/80 */
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Text & Borders */
+.dark .text-gray-900 {
+    color: white !important;
+}
+
+.dark .text-gray-500 {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.dark .border-gray-100 {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Buttons */
+.dark .hover\:bg-gray-100:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dataset Selection List */
+.dark .group:hover .text-gray-900 {
+    color: rgb(192 132 252); /* violet-400 */
+}
+
+.dark .group:hover .text-gray-500 {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .group:hover .border-gray-100 {
+    border-color: rgba(192, 132, 252, 0.4);
+}
+
+/* Delete Confirmation Modal */
+.dark .bg-white {
+    background-color: rgb(31 41 55); /* gray-800 */
+}
+
+.dark .bg-gray-100 {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .text-gray-900 {
+    color: white;
+}
+
+.dark .text-gray-600{
+    color: white;
+}
+
+.dark .text-gray-500 {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Close Button */
+.dark .hover\:bg-gray-100:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+</style>
+
 {% endblock %}
+

@@ -27,18 +27,6 @@
     .started1:hover{
         color: #2a3b41;
     }
-    body.dark {
-        background-color: #1a1a1a;
-        color: #e0e0e0;
-    }
-
-    body.dark a {
-        color: #e0e0e0;
-    }
-
-    body.dark .hover\:bg-white\/20:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
 </style>
 
 <!-- Hero Section -->
@@ -761,22 +749,7 @@
         }
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const body = document.body;
 
-        // Apply the theme immediately on page load
-        function applyTheme(theme) {
-            if (theme === "dark") {
-                body.classList.add("dark");
-            } else {
-                body.classList.remove("dark");
-            }
-        }
-
-        // Check local storage for theme preference
-        const savedTheme = localStorage.getItem("theme") || "light";
-        applyTheme(savedTheme);
-    });
 
 // Add Kaggle analyze button handler
 document.getElementById('analyze-kaggle').addEventListener('click', async function() {

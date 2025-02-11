@@ -1,4 +1,3 @@
-{% extends 'base.html' %}
 
 <div id="uploadModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden overflow-y-auto h-full w-full transition-opacity duration-300 ease-out opacity-0 z-50">
     <div class="relative top-5 mx-auto p-8 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-2xl bg-white/95 backdrop-blur-xl transform transition-all duration-300 ease-out scale-90 -translate-y-20">
@@ -125,45 +124,6 @@
 
 
 <script>
-
-    // Modal functions with animations
-    function openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        modal.classList.remove('hidden');
-        
-        // Trigger a reflow to ensure the transitions work
-        void modal.offsetWidth;
-        
-        // Add the visible classes
-        modal.classList.remove('opacity-0');
-        modal.classList.add('opacity-100');
-        
-        const modalContent = modal.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.classList.remove('scale-95', 'translate-y-4');
-            modalContent.classList.add('scale-100', 'translate-y-0');
-        }
-    }
-
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        
-        // Start the closing animation
-        modal.classList.remove('opacity-100');
-        modal.classList.add('opacity-0');
-        
-        const modalContent = modal.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.classList.remove('scale-100', 'translate-y-0');
-            modalContent.classList.add('scale-95', 'translate-y-4');
-        }
-        
-        // Hide the modal after the animation completes
-        setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 300);
-    }
-
 
     // Modal functions with animations
     function openModal(modalId) {
