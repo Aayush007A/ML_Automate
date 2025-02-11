@@ -224,6 +224,8 @@ def general_dashboard(request):
     # Get all datasets for the current user
     datasets = Dataset.objects.filter(user=request.user)
     import matplotlib.pyplot as plt
+    import seaborn as sns 
+    import plotly
     
     # Basic Statistics with safety checks
     total_datasets = datasets.count() or 0

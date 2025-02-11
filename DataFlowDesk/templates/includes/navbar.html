@@ -1,94 +1,141 @@
-{% load static %}
 
-<!-- Navigation -->
-    {% comment %} <nav id="main-nav" class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg backdrop-blur-lg border-b border-white/10"> {% endcomment %}
-    <nav id="main-nav" class="shadow-lg backdrop-blur-lg border-b border-white/10 bg-[#7b98a2]">
+    {% load static %}
+
+    <!-- Navigation -->
+    <nav id="main-nav" class="shadow-lg backdrop-blur-lg border-b border-white/10 bg-[#7b98a2] transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+            <div class="flex justify-between h-16 items-center">
                 <!-- Logo Section -->
-                <div class="flex items-center justify-center h-20 px-6 border-b -mt-2 border-white/10 mb-6">
-                    <a href="/" class="flex items-center justify-center w-full">
-                        <img src="{% static 'images/logo1.png' %}" alt="ML Automate Logo" class="h-24 w-48 object-contain ml-24 mt-4">
+                <div class="flex items-center">
+                    <a href="/">
+                        <img src="{% static 'images/logo1.png' %}" alt="ML Automate Logo" class="h-16 w-auto">
                     </a>
                 </div>
     
                 <!-- Desktop Navigation -->
-                <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-2">
-                    <a href="/" class="relative px-4 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white group">
-                        <span class="relative z-10">Home</span>
-                        <div class="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                    </a>
-                    
-                    <a href="{% url 'general_dashboard' %}" class="relative px-4 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white group">
-                        <span class="relative z-10">My datasets</span>
-                        <div class="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                    </a>
-                    
-                    <a href="{% url 'documentation' %}" class="relative px-4 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white group">
-                        <span class="relative z-10">Documentation</span>
-                        <div class="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                    </a>
-                    {% comment %} <a href="{% url 'tutorials' %}" class="relative px-4 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white group">
-                        <span class="relative z-10">Tutorials</span>
-                        <div class="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                    </a> {% endcomment %}
-                    
-                    <a href="{% url 'home' %}#about_section" class="relative px-4 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white group">
-                        <span class="relative z-10">About</span>
-                        <div class="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                    </a>
+                <div class="hidden sm:flex sm:items-center space-x-4">
+                    <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition">Home</a>
+                    <a href="{% url 'general_dashboard' %}" class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition">My Datasets</a>
+                    <a href="{% url 'documentation' %}" class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition">Documentation</a>
+                    <a href="{% url 'home' %}#about_section" class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition">About</a>
     
                     {% if user.is_authenticated %}
-                        <div class="flex items-center space-x-4 ml-4 border-l border-white/10 pl-4">
-                            <span class="text-sm font-medium">
-                                <span class="text-white/80">Welcome</span>
-                                <span class="text-white">{{ user.username }}</span>
-                            </span>
-                            <a href="{% url 'signout' %}" class="relative px-4 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white group">
-                                <span class="relative z-10">Sign Out</span>
-                                <div class="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                            </a>
-                        </div>
+                    <div class="flex items-center space-x-4 border-l border-white/20 pl-4">
+                        <span class="text-sm text-white">Welcome, <strong>{{ user.username }}</strong></span>
+                        <a href="{% url 'signout' %}" class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition">Sign Out</a>
+                    </div>
                     {% endif %}
                 </div>
     
-                <!-- Mobile menu button -->
-                <div class="flex items-center sm:hidden">
-                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+                <!-- Theme Toggle Switch -->
+                <div class="relative">
+                    <label for="theme-toggle" class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="theme-toggle" class="sr-only">
+                            <div class="toggle-bg block w-14 h-8 bg-gray-400 rounded-full"></div>
+                            <div class="toggle-dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-all duration-300"></div>
+                        </div>
+                        <span class="ml-3 text-sm font-medium text-white">Dark Mode</span>
+                    </label>
                 </div>
+    
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-btn" class="sm:hidden text-white focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
             </div>
         </div>
     
-        <!-- Mobile menu, show/hide based on menu state -->
-        <div class="sm:hidden bg-gradient-to-r bg-[#62776A] backdrop-blur-lg border-t border-white/10" id="mobile-menu" style="display: none;">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="/" class="block px-3 py-2 rounded-lg text-base font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200">Home</a>
-                <a href="{% url 'general_dashboard' %}" class="block px-3 py-2 rounded-lg text-base font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200">My datasets</a>
-                <a href="#" class="block px-3 py-2 rounded-lg text-base font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200">Documentation</a>
-                <a href="#" class="block px-3 py-2 rounded-lg text-base font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200">About</a>
-                {% if user.is_authenticated %}
-                    <div class="border-t border-white/10 pt-2 mt-2">
-                        <span class="block px-3 py-2 text-base font-medium text-white/80">Welcome, {{ user.username }}</span>
-                        <a href="{% url 'signout' %}" class="block px-3 py-2 rounded-lg text-base font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200">Sign Out</a>
-                    </div>
-                {% endif %}
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden sm:hidden bg-[#62776A] backdrop-blur-lg border-t border-white/10">
+            <a href="/" class="block px-4 py-2 text-white hover:bg-white/20 transition">Home</a>
+            <a href="{% url 'general_dashboard' %}" class="block px-4 py-2 text-white hover:bg-white/20 transition">My Datasets</a>
+            <a href="{% url 'documentation' %}" class="block px-4 py-2 text-white hover:bg-white/20 transition">Documentation</a>
+            <a href="{% url 'home' %}#about_section" class="block px-4 py-2 text-white hover:bg-white/20 transition">About</a>
+            {% if user.is_authenticated %}
+            <div class="border-t border-white/10">
+                <span class="block px-4 py-2 text-white">Welcome, {{ user.username }}</span>
+                <a href="{% url 'signout' %}" class="block px-4 py-2 text-white bg-red-500 hover:bg-red-600 transition">Sign Out</a>
             </div>
+            {% endif %}
         </div>
     </nav>
     
-
+    <!-- Dark Mode Toggle Script -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const mobileMenuButton = document.querySelector('#main-nav button');
-        const mobileMenu = document.querySelector('#mobile-menu');
-        
-        mobileMenuButton.addEventListener('click', function() {
-            const isHidden = mobileMenu.style.display === 'none';
-            mobileMenu.style.display = isHidden ? 'block' : 'none';
+        document.addEventListener("DOMContentLoaded", function () {
+            const themeToggle = document.getElementById("theme-toggle");
+            const body = document.body;
+            const toggleDot = document.querySelector(".toggle-dot");
+            const toggleBg = document.querySelector(".toggle-bg");
+    
+            // Apply the theme immediately on page load
+            function applyTheme(theme) {
+                if (theme === "dark") {
+                    body.classList.add("dark");
+                    themeToggle.checked = true;
+                    toggleDot.style.transform = "translateX(100%)";
+                    toggleBg.style.backgroundColor = "#222";
+                } else {
+                    body.classList.remove("dark");
+                    themeToggle.checked = false;
+                    toggleDot.style.transform = "translateX(0%)";
+                    toggleBg.style.backgroundColor = "#bbb";
+                }
+            }
+    
+            // Check local storage for theme preference
+            const savedTheme = localStorage.getItem("theme") || "light";
+            applyTheme(savedTheme);
+    
+            // Toggle theme and save preference
+            themeToggle.addEventListener("change", function () {
+                const newTheme = this.checked ? "dark" : "light";
+                localStorage.setItem("theme", newTheme);
+                applyTheme(newTheme);
+            });
+    
+            // Mobile menu toggle
+            document.getElementById("mobile-menu-btn").addEventListener("click", function () {
+                document.getElementById("mobile-menu").classList.toggle("hidden");
+            });
         });
-    });
     </script>
+    
+    <!-- Dark Mode Styles -->
+    <style>
+        /* Dark mode styles */
+        body.dark {
+            background-color: #1a1a1a;
+        }
+    
+        body.dark nav {
+            background-color: #2d2d2d;
+        }
+    
+        body.dark a {
+            color: #e0e0e0;
+        }
+    
+        body.dark .hover\:bg-white\/20:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+    
+        /* Theme switch animation */
+        .toggle-dot {
+            transition: transform 0.3s ease-in-out;
+        }
+    
+        #theme-toggle:checked + div .toggle-dot {
+            transform: translateX(100%);
+            background-color: #222;
+        }
+    
+        #theme-toggle:checked + div .toggle-bg {
+            background-color: #222;
+        }
+    </style>
+    
+    
