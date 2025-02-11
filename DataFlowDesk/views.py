@@ -223,6 +223,7 @@ def general_dashboard(request):
         
     # Get all datasets for the current user
     datasets = Dataset.objects.filter(user=request.user)
+    import matplotlib.pyplot as plt
     
     # Basic Statistics with safety checks
     total_datasets = datasets.count() or 0
@@ -336,23 +337,55 @@ def general_dashboard(request):
     plt.close(fig_missing)
     
     # 2. Data Types Distribution Pie Chart
+
     fig_types = plt.figure(figsize=(10, 6))
+
+    # Count dataset types
     data_types = {
         'CSV Files': datasets.filter(file_path__endswith='.csv').count() or 0,
         'Excel Files': (datasets.filter(file_path__endswith='.xlsx').count() + 
-                       datasets.filter(file_path__endswith='.xls').count()) or 0,
+                    datasets.filter(file_path__endswith='.xls').count()) or 0,
         'Text Files': datasets.filter(file_path__endswith='.txt').count() or 0,
     }
-    
+
     # Add default value if no data
     if sum(data_types.values()) == 0:
         data_types = {'No Data': 1}
-    
-    plt.pie(data_types.values(), labels=data_types.keys(), autopct='%1.1f%%', 
-        colors=['#4F46E5', '#10B981', '#F59E0B'],
-        explode=[0.05] * len(data_types))
-    plt.title('Dataset Types Distribution', pad=20)
+
+    # Filter out zero-value slices
+    labels = [key for key, value in data_types.items() if value > 0]
+    values = [value for value in data_types.values() if value > 0]
+
+    # Custom color palette (modern aesthetic)
+    colors = ['#4F46E5', '#10B981', '#F59E0B']
+
+    # Explode effect for emphasis
+    explode_values = [0.1 if value == max(values) else 0.05 for value in values]
+
+    # Create the pie chart
+    wedges, texts, autotexts = plt.pie(
+        values, labels=labels, autopct=lambda p: f'{p:.1f}%' if p > 0 else '', 
+        colors=colors[:len(values)], explode=explode_values, startangle=140, 
+        pctdistance=0.85, shadow=True, wedgeprops={'edgecolor': 'white', 'linewidth': 2}
+    )
+
+    # Make labels and percentages more readable
+    for text in texts + autotexts:
+        text.set_fontsize(12)
+        text.set_fontweight("bold")
+
+    # Create a donut-style effect (optional)
+    centre_circle = plt.Circle((0,0),0.70,fc='white')
+    fig_types.gca().add_artist(centre_circle)
+
+    # Set title with padding and bold font
+    plt.title('Dataset Types Distribution', fontsize=16, pad=20)
+
+    # Equal aspect ratio ensures the pie is circular
     plt.axis('equal')
+
+    plt.show()
+
     quality_trend_plot = fig_to_base64(fig_types)
     plt.close(fig_types)
 
